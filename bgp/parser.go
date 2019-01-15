@@ -27,8 +27,10 @@ func (fb *fieldBase) GetLength() uint16 {
 }
 
 // Field is the interface that all packet fields must implement.
-// GetLength() is implemented by FieldBase
+// Field is a single field/value within a packet and associated methods to help with manipulating said fields
 type Field interface {
 	GetLength() uint16
 	Read([]byte)
+	Dummy() []byte
+	Value() interface{}
 }
