@@ -1,7 +1,5 @@
 package bgp
 
-import "fmt"
-
 /*
 Go BGP Parser
 
@@ -10,16 +8,8 @@ Takes incoming BGP messages in Byte format and decodes them returning useable st
 type Parser struct {
 }
 
-func (p *Parser) Parse([]byte) {
-	// Use field Initilization methods to retrieve refs
-	headerFields := []Field{
-		MakeMarker(),
-		MakeLength(),
-	}
-
-	for _, h := range headerFields {
-		fmt.Printf("Len: %v\n", h.GetLength())
-	}
+func (p *Parser) Parse(b []byte) {
+	MakeHeader(b)
 }
 
 // Field base is the basic construct for each field
@@ -40,4 +30,5 @@ func (fb *fieldBase) GetLength() uint16 {
 // GetLength() is implemented by FieldBase
 type Field interface {
 	GetLength() uint16
+	Read([]byte)
 }
