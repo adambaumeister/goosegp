@@ -34,7 +34,7 @@ type BgpHeader struct {
 
 // Init the header and fields.
 // Requires: byte slice, starting at header beginning
-func MakeHeader(b []byte) BgpHeader {
+func ReadHeader(b []byte) BgpHeader {
 	bgp := BgpHeader{}
 	bgp.Marker = MakeMarker()
 	bgp.Length = MakeLength()
@@ -54,10 +54,10 @@ func MakeHeader(b []byte) BgpHeader {
 			errors.RaiseError(fmt.Sprintf("Invalid BGP packet header. Expected %v more bytes.", l))
 		}
 		f.Read(b[offset:])
-		fmt.Printf("%v\n", f.Value())
 		offset = offset + l
 	}
 
+	fmt.Printf("Header length: %v", bgp.Length.Value())
 	return bgp
 }
 
@@ -75,6 +75,12 @@ func MakeDummyHeader() []byte {
 	}
 	return b
 }
+
+/*
+########
+Field definitions
+########
+*/
 
 // Marker
 // Used for interoperability.

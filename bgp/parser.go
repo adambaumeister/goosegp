@@ -1,5 +1,7 @@
 package bgp
 
+import "fmt"
+
 /*
 Go BGP Parser
 
@@ -8,8 +10,18 @@ Takes incoming BGP messages in Byte format and decodes them returning useable st
 type Parser struct {
 }
 
+// Take an incoming byte slice and convert to structs
 func (p *Parser) Parse(b []byte) {
-	MakeHeader(b)
+	// Firt the headers are made
+	h := ReadHeader(b)
+	newSlice := b[h.Length.value:]
+	// Switch to message type depending on header
+	switch h.Type.value {
+	case MESSAGE_OPEN:
+		msg := ReadMsgOpen(newSlice)
+		fmt.Printf("%v", msg.AutonomousSystem)
+	}
+
 }
 
 // Field base is the basic construct for each field
