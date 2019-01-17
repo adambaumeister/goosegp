@@ -14,13 +14,7 @@ type Parser struct {
 func (p *Parser) Parse(b []byte) {
 	// Firt the headers are made
 	h := ReadHeader(b)
-	newSlice := b[h.Length.value:]
-	// Switch to message type depending on header
-	switch h.Type.value {
-	case MESSAGE_OPEN:
-		msg := ReadMsgOpen(newSlice)
-		fmt.Printf("%v", msg.AutonomousSystem)
-	}
+	fmt.Printf("Length: %v\n", h.Length.Value())
 
 }
 
@@ -43,6 +37,6 @@ func (fb *fieldBase) GetLength() uint16 {
 type Field interface {
 	GetLength() uint16
 	Read([]byte)
-	Dummy() []byte
 	Value() interface{}
+	Serialize() []byte
 }

@@ -32,6 +32,16 @@ type BgpHeader struct {
 	fields []Field
 }
 
+// Serialize converts this object to a byte array for the wire
+func (bgp *BgpHeader) Serialize() []byte {
+	var b []byte
+	for _, f := range bgp.fields {
+		fb := f.Serialize()
+		b = append(b, fb...)
+	}
+	return b
+}
+
 // Init the header and fields.
 // Requires: byte slice, starting at header beginning
 func ReadHeader(b []byte) BgpHeader {
@@ -56,24 +66,23 @@ func ReadHeader(b []byte) BgpHeader {
 		f.Read(b[offset:])
 		offset = offset + l
 	}
-
-	fmt.Printf("Header length: %v", bgp.Length.Value())
 	return bgp
 }
 
-// DummyHeader returns a byte array of a header filled with dummy data
-// Useful for testing the unmarshaling of headers.
-func MakeDummyHeader() []byte {
-	var b []byte
-	fields := []Field{
-		MakeMarker(),
-		MakeLength(),
-		MakeType(),
+// MakeHeader crafts a packet header
+func MakeHeader() BgpHeader {
+	bgp := BgpHeader{
+		Marker: MakeMarker(),
+		Length: MakeLength(),
+		Type:   MakeType(),
 	}
-	for _, f := range fields {
-		b = append(b, f.Dummy()...)
+	bgp.fields = []Field{
+		bgp.Marker,
+		bgp.Length,
+		bgp.Type,
 	}
-	return b
+
+	return bgp
 }
 
 /*
@@ -101,10 +110,7 @@ func (f *Marker) Read([]byte) {
 func (f *Marker) Value() interface{} {
 	return 0
 }
-
-// Dummy returns a byte representation of this field filled with dummy data
-// Useful for debuggin
-func (f *Marker) Dummy() []byte {
+func (f *Marker) Serialize() []byte {
 	var b []byte
 	b = []byte{255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255}
 	return b
@@ -130,10 +136,12 @@ func (f *Length) Read(b []byte) {
 func (f *Length) Value() interface{} {
 	return f.value
 }
-
-func (f *Length) Dummy() []byte {
-	var b []byte
-	b = []byte{0, 45}
+func (f *Length) Write(v uint16) {
+	f.value = v
+}
+func (f *Length) Serialize() []byte {
+	b := make([]byte, 2)
+	binary.BigEndian.PutUint16(b, f.value)
 	return b
 }
 
@@ -160,8 +168,9 @@ func (f *Type) Read(b []byte) {
 func (f *Type) Value() interface{} {
 	return f.value
 }
-func (f *Type) Dummy() []byte {
-	var b []byte
-	b = []byte{1}
-	return b
+func (f *Type) Write(v uint8) {
+	f.value = v
+}
+func (f *Type) Serialize() []byte {
+	return []byte{f.value}
 }

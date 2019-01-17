@@ -19,16 +19,13 @@ func ReadMsgOpen(b []byte) BgpMsgOpen {
 	return bgp
 }
 
-func MakeDummyOpen() []byte {
-	var b []byte
-	fields := []Field{
-		MakeVersion(),
-		MakeAutonomousSystem(),
+func MakeOpen() BgpMsgOpen {
+	bgp := BgpMsgOpen{
+		Version:          MakeVersion(),
+		AutonomousSystem: MakeAutonomousSystem(),
 	}
-	for _, f := range fields {
-		b = append(b, f.Dummy()...)
-	}
-	return b
+
+	return bgp
 }
 
 /*
@@ -49,6 +46,8 @@ type Version struct {
 func MakeVersion() *Version {
 	f := Version{}
 	f.length = VERSION_LENGTH
+	// Default
+	f.value = 4
 	return &f
 }
 func (f *Version) Read(b []byte) {
@@ -57,10 +56,8 @@ func (f *Version) Read(b []byte) {
 func (f *Version) Value() interface{} {
 	return f.value
 }
-func (f *Version) Dummy() []byte {
-	var b []byte
-	b = []byte{4}
-	return b
+func (f *Version) Serialize() []byte {
+	return []byte{f.value}
 }
 
 // AS Number //
@@ -82,8 +79,11 @@ func (f *AutonomousSystem) Read(b []byte) {
 func (f *AutonomousSystem) Value() interface{} {
 	return f.value
 }
-func (f *AutonomousSystem) Dummy() []byte {
-	var b []byte
-	b = []byte{2, 128}
+func (f *AutonomousSystem) Write(v uint16) {
+	f.value = v
+}
+func (f *AutonomousSystem) Serialize() []byte {
+	b := make([]byte, 2)
+	binary.BigEndian.PutUint16(b, f.value)
 	return b
 }
