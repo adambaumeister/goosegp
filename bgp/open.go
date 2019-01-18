@@ -6,26 +6,37 @@ type BgpMsgOpen struct {
 	Version          *Version
 	AutonomousSystem *AutonomousSystem
 	fields           []Field
+
+	Length uint16
 }
 
-func ReadMsgOpen(b []byte) BgpMsgOpen {
-	bgp := BgpMsgOpen{}
+func (bgp *BgpMsgOpen) Init() {
 	bgp.Version = MakeVersion()
 	bgp.AutonomousSystem = MakeAutonomousSystem()
 	bgp.fields = []Field{
 		bgp.Version,
 		bgp.AutonomousSystem,
 	}
+}
+
+func ReadMsgOpen(b []byte) BgpMsgOpen {
+	bgp := BgpMsgOpen{}
+	bgp.Init()
 	return bgp
 }
 
 func MakeOpen() BgpMsgOpen {
-	bgp := BgpMsgOpen{
-		Version:          MakeVersion(),
-		AutonomousSystem: MakeAutonomousSystem(),
-	}
-
+	bgp := BgpMsgOpen{}
+	bgp.Init()
 	return bgp
+}
+
+func (bgp *BgpMsgOpen) GetLength() uint16 {
+	var l uint16
+	for _, f := range bgp.fields {
+		l = l + f.GetLength()
+	}
+	return l
 }
 
 /*

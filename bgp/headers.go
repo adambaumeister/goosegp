@@ -32,7 +32,7 @@ type BgpHeader struct {
 	fields []Field
 }
 
-// Serialize converts this object to a byte array for the wire
+// Serialize a BGP Header for the wire
 func (bgp *BgpHeader) Serialize() []byte {
 	var b []byte
 	for _, f := range bgp.fields {
@@ -42,10 +42,7 @@ func (bgp *BgpHeader) Serialize() []byte {
 	return b
 }
 
-// Init the header and fields.
-// Requires: byte slice, starting at header beginning
-func ReadHeader(b []byte) BgpHeader {
-	bgp := BgpHeader{}
+func (bgp *BgpHeader) Init() {
 	bgp.Marker = MakeMarker()
 	bgp.Length = MakeLength()
 	bgp.Type = MakeType()
@@ -55,6 +52,14 @@ func ReadHeader(b []byte) BgpHeader {
 		bgp.Length,
 		bgp.Type,
 	}
+}
+
+// Parse (unmarshal) a BGP packet Header and fields.
+// Requires: byte slice, starting at header beginning
+func ReadHeader(b []byte) BgpHeader {
+	bgp := BgpHeader{}
+	bgp.Init()
+
 	// Start byte offset for the header is aaaallways zero
 	offset := uint16(0)
 	// Iterate through each field and populate the values
@@ -69,20 +74,20 @@ func ReadHeader(b []byte) BgpHeader {
 	return bgp
 }
 
-// MakeHeader crafts a packet header
+// MakeHeader crafts an empty packet header
 func MakeHeader() BgpHeader {
-	bgp := BgpHeader{
-		Marker: MakeMarker(),
-		Length: MakeLength(),
-		Type:   MakeType(),
-	}
-	bgp.fields = []Field{
-		bgp.Marker,
-		bgp.Length,
-		bgp.Type,
-	}
+	bgp := BgpHeader{}
+	bgp.Init()
 
 	return bgp
+}
+
+func (bgp *BgpHeader) GetLength() uint16 {
+	var l uint16
+	for _, f := range bgp.fields {
+		l = l + f.GetLength()
+	}
+	return l
 }
 
 /*
