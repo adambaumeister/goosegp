@@ -12,10 +12,18 @@ type Parser struct {
 
 // Take an incoming byte slice and convert to structs
 func (p *Parser) Parse(b []byte) {
+	packet := BgpPacket{}
 	// Firt the headers are made
 	h := ReadHeader(b)
-	fmt.Printf("Length: %v\n", h.Length.Value())
+	headerLength := h.GetLength()
+	packet.Header = h
 
+	switch h.Type.value {
+	case MESSAGE_OPEN:
+		m := ReadMsgOpen(b[headerLength:])
+		packet.Message = m
+		fmt.Printf("ye %v\n", m.AutonomousSystem.Value())
+	}
 }
 
 // Field base is the basic construct for each field

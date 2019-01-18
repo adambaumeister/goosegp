@@ -1,12 +1,11 @@
 package main
 
 import (
-	"fmt"
 	"github.com/adamb/go_osegp/bgp"
 )
 
 func main() {
-	//b := bgp.Parser{}
+	b := bgp.Parser{}
 
 	o := bgp.MakeOpen()
 	o.AutonomousSystem.Write(6262)
@@ -15,6 +14,6 @@ func main() {
 	h.Type.Write(bgp.MESSAGE_OPEN)
 	h.Length.Write(h.GetLength() + o.GetLength())
 
-	fmt.Printf("Total message length: %v\n", h.Length.Value())
-	//b.Parse(h.Serialize())
+	sp := append(h.Serialize(), o.Serialize()...)
+	b.Parse(sp)
 }
