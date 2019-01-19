@@ -9,7 +9,7 @@ type Parser struct {
 }
 
 // Take an incoming byte slice and convert to structs
-func (p *Parser) Parse(b []byte) {
+func (p *Parser) Parse(b []byte) BgpPacket {
 	packet := BgpPacket{}
 	// Firt the headers are made
 	h := ReadHeader(b)
@@ -20,6 +20,8 @@ func (p *Parser) Parse(b []byte) {
 	case MESSAGE_OPEN:
 		m := ReadMsgOpen(b[headerLength:])
 		packet.Message = m
+	case MESSAGE_KEEPALIVE:
+		return packet
 	}
 }
 
