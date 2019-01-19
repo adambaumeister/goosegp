@@ -4,11 +4,15 @@ import (
 	"encoding/binary"
 	"fmt"
 	"github.com/adamb/go_osegp/bgp/errors"
+	"net"
 )
 
 type BgpMsgOpen struct {
 	Version          *Version
 	AutonomousSystem *AutonomousSystem
+	HoldTime         *HoldTime
+	Identifier       *Identifier
+	Params           *OptionalParams
 	fields           []Field
 
 	Length uint16
@@ -27,18 +31,25 @@ func (bgp *BgpMsgOpen) Serialize() []byte {
 func (bgp *BgpMsgOpen) Init() {
 	bgp.Version = MakeVersion()
 	bgp.AutonomousSystem = MakeAutonomousSystem()
+	bgp.HoldTime = MakeHoldTime()
+	bgp.Identifier = MakeIdentifier()
+	bgp.Params = MakeOptionalParams()
 	bgp.fields = []Field{
 		bgp.Version,
 		bgp.AutonomousSystem,
+		bgp.HoldTime,
+		bgp.Identifier,
+		bgp.Params,
 	}
 }
 
 func ReadMsgOpen(b []byte) BgpMsgOpen {
 	bgp := BgpMsgOpen{}
 	bgp.Init()
-	// Start byte offset for the header is aaaallways zero
+	// Start byte offset
 	offset := uint16(0)
 	// Iterate through each field and populate the values
+	fmt.Printf("Debug Start: %v\n", b)
 	for _, f := range bgp.fields {
 		l := f.GetLength()
 		if int(offset+l) > len(b) {
@@ -128,28 +139,28 @@ func (f *AutonomousSystem) Serialize() []byte {
 // BGP Autonomous sytem of remote router.
 type Identifier struct {
 	fieldBase
-	value uint32
+	value net.IP
 }
 
 func MakeIdentifier() *Identifier {
 	f := Identifier{}
-	f.length = AUTONOMOUS_SYSTEM_LENGTH
+	f.length = 4
 	return &f
 }
 func (f *Identifier) Read(b []byte) {
 	l := f.GetLength()
-	f.value = binary.BigEndian.Uint32(b[:l])
+	fmt.Printf("Debug: %v\n", b)
+	f.value = net.IP(b[:l])
 }
 func (f *Identifier) Value() interface{} {
 	return f.value
 }
-func (f *Identifier) Write(v uint32) {
+func (f *Identifier) Write(v []byte) {
+	fmt.Printf("Write debug: %v\n", v)
 	f.value = v
 }
 func (f *Identifier) Serialize() []byte {
-	b := make([]byte, 4)
-	binary.BigEndian.PutUint32(b, f.value)
-	return b
+	return f.value
 }
 
 // Hold time
@@ -161,7 +172,7 @@ type HoldTime struct {
 
 func MakeHoldTime() *HoldTime {
 	f := HoldTime{}
-	f.length = AUTONOMOUS_SYSTEM_LENGTH
+	f.length = 2
 	return &f
 }
 func (f *HoldTime) Read(b []byte) {
@@ -187,7 +198,9 @@ type OptionalParams struct {
 }
 
 func MakeOptionalParams() *OptionalParams {
-	f := OptionalParams{}
+	f := OptionalParams{
+		params: make(map[uint8]OptionalParam),
+	}
 	f.length = 0
 	return &f
 }
@@ -199,17 +212,36 @@ func (f *OptionalParams) Read(b []byte) {
 		op := OptionalParam{}
 		op.Read(b[offset:])
 		offset = offset + uint16(op.Length)
+		f.params[op.Type] = op
 	}
+}
+func (f *OptionalParams) Write(op OptionalParam) {
+	f.params[op.Type] = op
+}
+func (f *OptionalParams) Value() interface{} {
+	return f.params
+}
+func (f *OptionalParams) Serialize() []byte {
+	var b []byte
+	for _, op := range f.params {
+		b = append(b, op.Serialize()...)
+	}
+	return b
 }
 
 type OptionalParam struct {
 	Type   uint8
 	Length uint8
-	Value  interface{}
+	Value  []byte
 }
 
 func (f *OptionalParam) Read(b []byte) {
 	f.Type = b[0]
 	f.Length = b[1]
 	f.Value = b[1:f.Length]
+}
+func (f *OptionalParam) Serialize() []byte {
+	b := []byte{f.Type, f.Length}
+	b = append(b, f.Value...)
+	return b
 }

@@ -1,6 +1,8 @@
 package bgp
 
-import "fmt"
+import (
+	"fmt"
+)
 
 /*
 Go BGP Parser
@@ -22,7 +24,7 @@ func (p *Parser) Parse(b []byte) {
 	case MESSAGE_OPEN:
 		m := ReadMsgOpen(b[headerLength:])
 		packet.Message = m
-		fmt.Printf("ye %v\n", m.AutonomousSystem.Value())
+		fmt.Printf("%v\n", m.Identifier.value.String())
 	}
 }
 
