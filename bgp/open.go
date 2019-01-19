@@ -28,6 +28,7 @@ func (bgp *BgpMsgOpen) Serialize() []byte {
 	return b
 }
 
+// Populate all the fields within an OPEN message
 func (bgp *BgpMsgOpen) Init() {
 	bgp.Version = MakeVersion()
 	bgp.AutonomousSystem = MakeAutonomousSystem()
@@ -43,13 +44,13 @@ func (bgp *BgpMsgOpen) Init() {
 	}
 }
 
+// Read (unmarshal) an OPEN message
 func ReadMsgOpen(b []byte) BgpMsgOpen {
 	bgp := BgpMsgOpen{}
 	bgp.Init()
 	// Start byte offset
 	offset := uint16(0)
 	// Iterate through each field and populate the values
-	fmt.Printf("Debug Start: %v\n", b)
 	for _, f := range bgp.fields {
 		l := f.GetLength()
 		if int(offset+l) > len(b) {
@@ -61,12 +62,14 @@ func ReadMsgOpen(b []byte) BgpMsgOpen {
 	return bgp
 }
 
+// Instantiate an OPEN message
 func MakeOpen() BgpMsgOpen {
 	bgp := BgpMsgOpen{}
 	bgp.Init()
 	return bgp
 }
 
+// Return the total length of the OPEN Message, not including the packet header
 func (bgp *BgpMsgOpen) GetLength() uint16 {
 	var l uint16
 	for _, f := range bgp.fields {
@@ -142,6 +145,8 @@ type Identifier struct {
 	value net.IP
 }
 
+// Remote identifier of BGP session
+// IP address format so it's converted to a net.IP object
 func MakeIdentifier() *Identifier {
 	f := Identifier{}
 	f.length = 4
@@ -149,14 +154,12 @@ func MakeIdentifier() *Identifier {
 }
 func (f *Identifier) Read(b []byte) {
 	l := f.GetLength()
-	fmt.Printf("Debug: %v\n", b)
 	f.value = net.IP(b[:l])
 }
 func (f *Identifier) Value() interface{} {
 	return f.value
 }
 func (f *Identifier) Write(v []byte) {
-	fmt.Printf("Write debug: %v\n", v)
 	f.value = v
 }
 func (f *Identifier) Serialize() []byte {
@@ -229,6 +232,8 @@ func (f *OptionalParams) Serialize() []byte {
 	return b
 }
 
+// OptionalParam represents a single paramater
+// OP's are mapped to actual params such as capabilities elsewhere.
 type OptionalParam struct {
 	Type   uint8
 	Length uint8
