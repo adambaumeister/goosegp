@@ -1,4 +1,4 @@
-package bgp
+package packet
 
 import "net"
 

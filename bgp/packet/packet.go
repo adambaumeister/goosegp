@@ -1,4 +1,4 @@
-package bgp
+package packet
 
 type BgpPacket struct {
 	Header BgpHeader

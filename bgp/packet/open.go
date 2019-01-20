@@ -1,4 +1,4 @@
-package bgp
+package packet
 
 import (
 	"encoding/binary"
@@ -7,6 +7,10 @@ import (
 	"net"
 )
 
+/*
+BgpMsgOpen represents a BGP "OPEN" Message.
+OPEN is used for the initial BGP session establishment.
+*/
 type BgpMsgOpen struct {
 	Version          *Version
 	AutonomousSystem *AutonomousSystem

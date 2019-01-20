@@ -1,4 +1,4 @@
-package bgp
+package packet
 
 /*
 Go BGP Parser
@@ -23,6 +23,7 @@ func (p *Parser) Parse(b []byte) BgpPacket {
 	case MESSAGE_KEEPALIVE:
 		return packet
 	}
+	return packet
 }
 
 // Field base is the basic construct for each field
@@ -35,6 +36,7 @@ type fieldBase struct {
 	length uint16
 }
 
+// Return the length, in bytes, of this field.
 func (fb *fieldBase) GetLength() uint16 {
 	return fb.length
 }
