@@ -33,7 +33,7 @@ type BgpHeader struct {
 }
 
 // Serialize a BGP Header for the wire
-func (bgp *BgpHeader) Serialize() []byte {
+func (bgp BgpHeader) Serialize() []byte {
 	var b []byte
 	for _, f := range bgp.fields {
 		fb := f.Serialize()

@@ -21,9 +21,32 @@ Router -> session -> packet
 type Session struct {
 	Config *config.Config
 
-	PacketIn chan packet.BgpPacket
+	PacketIn  chan packet.BgpPacket
+	PacketOut chan packet.BgpPacket
+	Signal    chan Signal
 }
 
+// Craft an OPEN packet based upon the configuration.
+func (s *Session) CraftOpen() packet.BgpPacket {
+	o := packet.MakeOpen()
+	o.AutonomousSystem.Write(s.Config.Router.HoldTime)
+	o.HoldTime.Write(s.Config.Router.HoldTime)
+
+	o.Identifier.Write(s.Config.Router.Address.To4())
+
+	h := packet.MakeHeader()
+	h.Type.Write(packet.MESSAGE_OPEN)
+	h.Length.Write(h.GetLength() + o.GetLength())
+
+	bgp := packet.BgpPacket{
+		Header:  h,
+		Message: o,
+	}
+
+	return bgp
+}
+
+// StartSessionLister begins listening for incoming BGP sessions.
 func (s *Session) StartSessionListener() {
 	l, err := net.Listen("tcp", s.Config.Router.Address.String()+":179")
 	errors.CheckError(err)
@@ -31,15 +54,38 @@ func (s *Session) StartSessionListener() {
 		conn, err := l.Accept()
 		errors.CheckError(err)
 		fmt.Printf("Received conn from %v\n", conn.RemoteAddr())
+
 		b := packet.BgpPacket{}
 		s.PacketIn <- b
 	}
 }
 
+// StartSessionSender attempts to initiate a TCP connection to a remote address
+func (s *Session) StartSessionSender() {
+	for _, neighbor := range s.Config.Neighbors {
+		conn, err := net.DialTimeout("tcp", neighbor.Remote.Address.String()+":179", s.Config.ConnTimeout)
+		errors.CheckError(err)
+
+		open := s.CraftOpen()
+		conn.Write(open.Serialize())
+	}
+
+}
+
+// SessionInit begins a BGP session.
+// It starts a listener, on port 179, and attempts to peer to all configured neighbors.
 func SessionInit(c config.Config) {
 	s := Session{
-		Config: &c,
+		Config:   &c,
+		PacketIn: make(chan packet.BgpPacket),
 	}
 	go s.StartSessionListener()
-	_ = <-s.PacketIn
+	for {
+		select {
+		case _ = <-s.PacketIn:
+			fmt.Printf("Got a packet...\n")
+		case s := <-s.Signal:
+			fmt.Printf("Recieved signal %v. Exiting.", s.SignalType)
+		}
+	}
 }

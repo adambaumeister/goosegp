@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"net"
 	"os"
+	"time"
 )
 
 const DEFAULT_HOLDTIME = 60
@@ -13,6 +14,8 @@ const DEFAULT_HOLDTIME = 60
 type Config struct {
 	Router    Router
 	Neighbors []Neighbor
+
+	ConnTimeout time.Duration
 }
 
 type Router struct {
