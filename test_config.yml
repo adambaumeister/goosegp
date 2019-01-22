@@ -1,0 +1,9 @@
+router:
+  as: 9999
+  address: 192.168.1.158
+  holdtime: 60
+
+neighbors:
+  - remote:
+      as: 9999
+      address: 192.168.1.158

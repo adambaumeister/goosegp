@@ -8,7 +8,6 @@ import (
 // Test function
 // Instantiates a dummy packet, testing the write, and then parses it, testing the read.
 func TestBackend(t *testing.T) {
-	b := Parser{}
 
 	// Try an OPEN packet first
 	o := MakeOpen()
@@ -27,7 +26,5 @@ func TestBackend(t *testing.T) {
 	h.Length.Write(h.GetLength() + o.GetLength())
 
 	sp := append(h.Serialize(), o.Serialize()...)
-	b.Parse(sp)
-
-	// Now an UPDATE packet
+	Parse(sp)
 }

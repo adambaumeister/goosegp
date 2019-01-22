@@ -25,7 +25,7 @@ type Router struct {
 }
 
 type Neighbor struct {
-	Remote *Router
+	Remote Router
 }
 
 func GetFromEnv(key string) (string, bool) {

@@ -53,10 +53,10 @@ func (s *Session) StartSessionListener() {
 	for {
 		conn, err := l.Accept()
 		errors.CheckError(err)
-		fmt.Printf("Received conn from %v\n", conn.RemoteAddr())
 
-		b := packet.BgpPacket{}
-		s.PacketIn <- b
+		bgp := packet.ParseFromConn(conn)
+		fmt.Printf("Got a packet with type %v\n", bgp.Header.Type.Value())
+		s.PacketIn <- bgp
 	}
 }
 
@@ -67,6 +67,7 @@ func (s *Session) StartSessionSender() {
 		errors.CheckError(err)
 
 		open := s.CraftOpen()
+		fmt.Printf("DEBUG: %v\n", open.Serialize())
 		conn.Write(open.Serialize())
 	}
 
@@ -82,8 +83,8 @@ func SessionInit(c config.Config) {
 	go s.StartSessionListener()
 	for {
 		select {
-		case _ = <-s.PacketIn:
-			fmt.Printf("Got a packet...\n")
+		case bgp := <-s.PacketIn:
+			fmt.Printf("Got a packet with type %v\n", bgp.Header.Type.Value())
 		case s := <-s.Signal:
 			fmt.Printf("Recieved signal %v. Exiting.", s.SignalType)
 		}
